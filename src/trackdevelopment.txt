@@ -1,0 +1,35 @@
+node -v
+	v20.11.1
+npm -v
+	10.5.0
+
+Alku: https://www.youtube.com/watch?v=IaJqMcOMuDM&list=PL4TsCJ0m7D4hRbqxFkT2GF64CubYoCAVZ&index=19
+
+Sitten githubiin julkaisu: https://www.youtube.com/watch?v=Q9n2mLqXFpU
+
+Styled components: https://www.youtube.com/watch?v=fBBqvcRlqqU&list=PLC3y8-rFHvwgu-G08-7ovbN9EyhF_cltM&index=2
+
+
+8.6.2024
+npx create-react-app pwa-react-app1 --template cra-template-pwa
+npm start
+
+9.6.
+serviceworker kuntoon, lighthouse audit
+
+lisätty gitiin sivuksi
+
+git add .
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/SeijaLauronen/PWAReactApp1.git
+git push -u origin main
+
+npm install gh-pages --save-dev
+
+Styled components
+https://www.youtube.com/watch?v=fBBqvcRlqqU&list=PLC3y8-rFHvwgu-G08-7ovbN9EyhF_cltM&index=2
+lisätty extensio vscode-styled-components
+npm install styled-components
+
+
