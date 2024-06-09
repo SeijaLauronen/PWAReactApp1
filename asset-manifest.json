@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/PWAReactApp1/static/css/main.f855e6bc.css",
+    "main.js": "/PWAReactApp1/static/js/main.6a9b0ddf.js",
+    "index.html": "/PWAReactApp1/index.html",
+    "main.f855e6bc.css.map": "/PWAReactApp1/static/css/main.f855e6bc.css.map",
+    "main.6a9b0ddf.js.map": "/PWAReactApp1/static/js/main.6a9b0ddf.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.f855e6bc.css",
+    "static/js/main.6a9b0ddf.js"
+  ]
+}
