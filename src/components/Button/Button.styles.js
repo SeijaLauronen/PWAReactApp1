@@ -13,6 +13,13 @@ display: inline-block;
 font-size: large;
 cursor: pointer;
 transition: 0.5s all ease-out;
+&:hover {
+    background-color: ${(props) => 
+        props.variant !=='outline' ? '#FFF' : '#4caf50'};
+    color: ${(props) => 
+        props.variant !=='outline' ? '#4caf50' : 'white'};
+
+}
 `
 
 export const FancyButton = styled(StyledButton)`
