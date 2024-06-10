@@ -1,4 +1,4 @@
-import {ThemeProvider} from 'styled-components'
+import {ThemeProvider, createGlobalStyle} from 'styled-components'
 //import React from 'react';
 import './App.css';
 //Jostain syystä valittaa tästä, että on jo importattu, mutta pienellä kirjaimella button
@@ -13,13 +13,21 @@ const theme = {
   light: {
     primary: '#fff',
     text: '#000'
-  }
+  },
+  fontFamily: 'Segoe UI'
 }
 
+const GlobalStyle= createGlobalStyle`
+button {
+  /*font-family: 'Roboto';*/
+  font-family: ${(props) => props.theme.fontFamily}
+}
+`
 
 function App() {
   return (
     <ThemeProvider theme={theme}>
+      <GlobalStyle />
       <div className="App">
         <p>ReactPWA 2 ServiceWorker</p>
         <p>
