@@ -40,3 +40,9 @@ export const SubmitButton = styled(StyledButton).attrs((props)=>({
         transform:translateY(4px)
     }
 `
+
+export const DarkButton = styled(StyledButton)`
+border: 2px solid ${(props) => props.theme.dark.primary};
+background-color: ${(props) => props.theme.dark.primary};
+color: ${(props) => props.theme.dark.text};
+`
