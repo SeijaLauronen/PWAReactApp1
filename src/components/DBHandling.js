@@ -1,9 +1,77 @@
 import React, { useState, useEffect } from 'react';
+import styled from 'styled-components';
+
+const Container = styled.div`
+  padding: 20px;
+`;
+
+const Form = styled.div`
+  margin-bottom: 20px;
+`;
+
+const Input = styled.input`
+  margin-right: 10px;
+  padding: 5px;
+`;
+
+const Button = styled.button`
+  margin-right: 10px;
+  padding: 5px 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #45a049;
+  }
+`;
+
+const DataList = styled.ul`
+  list-style-type: none;
+  padding: 0;
+`;
+
+const DataItem = styled.li`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+`;
+
+const DataText = styled.span`
+  margin-right: 10px;
+`;
+
+const EditButton = styled.button`
+  margin-right: 10px;
+  padding: 5px 10px;
+  background-color: #2196F3;
+  color: white;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #0b7dda;
+  }
+`;
+
+const DeleteButton = styled.button`
+  padding: 5px 10px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #da190b;
+  }
+`;
 
 const IndexedDBComponent = () => {
   const [db, setDb] = useState(null);
   const [data, setData] = useState([]);
-  const [singleData, setSingleData] = useState(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
 
@@ -56,24 +124,6 @@ const IndexedDBComponent = () => {
     };
   };
 
-  const getData = (key) => {
-    const transaction = db.transaction(['MyObjectStore']);
-    const objectStore = transaction.objectStore('MyObjectStore');
-    const request = objectStore.get(key);
-
-    request.onsuccess = (event) => {
-      if (request.result) {
-        setSingleData(request.result);
-      } else {
-        console.log('No data found for the key');
-      }
-    };
-
-    request.onerror = (event) => {
-      console.error('Get request error:', event.target.errorCode);
-    };
-  };
-
   const updateData = (data) => {
     const transaction = db.transaction(['MyObjectStore'], 'readwrite');
     const objectStore = transaction.objectStore('MyObjectStore');
@@ -109,46 +159,48 @@ const IndexedDBComponent = () => {
     setEmail('');
   };
 
+  const handleUpdateData = (id) => {
+    const updatedName = prompt('Enter new name:', name);
+    const updatedEmail = prompt('Enter new email:', email);
+    if (updatedName && updatedEmail) {
+      updateData({ id, name: updatedName, email: updatedEmail });
+    }
+  };
+
   return (
-    <div>
+    <Container>
       <h1>IndexedDB React Component</h1>
-      <div>
-        <input
+      <Form>
+        <Input
           type="text"
           placeholder="Name"
           value={name}
           onChange={(e) => setName(e.target.value)}
         />
-        <input
+        <Input
           type="email"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
-        <button onClick={handleAddData}>Add Data</button>
-      </div>
-      <button onClick={() => getData(1)}>Get Data 1</button>
-      <button onClick={() => updateData({ id: 1, name, email })}>Update Data</button>
-      <button onClick={() => deleteData(1)}>Delete Data</button>
-
-      <h2>All Data:</h2>
-      <ul>
+        <Button onClick={handleAddData}>Add Data</Button>
+      </Form>
+      <DataList>
         {data.map((item) => (
-          <li key={item.id}>
-            ID: {item.id}, Name: {item.name}, Email: {item.email}
-          </li>
+          <DataItem key={item.id}>
+            <div>
+              <DataText>ID: {item.id}</DataText>
+              <DataText>Name: {item.name}</DataText>
+              <DataText>Email: {item.email}</DataText>
+            </div>
+            <div>
+              <EditButton onClick={() => handleUpdateData(item.id)}>Edit</EditButton>
+              <DeleteButton onClick={() => deleteData(item.id)}>Delete</DeleteButton>
+            </div>
+          </DataItem>
         ))}
-      </ul>
-
-      {singleData && (
-        <div>
-          <h2>Retrieved Data:</h2>
-          <p>ID: {singleData.id}</p>
-          <p>Name: {singleData.name}</p>
-          <p>Email: {singleData.email}</p>
-        </div>
-      )}
-    </div>
+      </DataList>
+    </Container>
   );
 };
 
