@@ -5,23 +5,44 @@ const Container = styled.div`
   padding: 20px;
 `;
 
-const Form = styled.div`
+const FormXX = styled.div`
   margin-bottom: 20px;
   position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+`;
+
+const Form = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `;
 
 const Input = styled.input`
   margin-right: 10px;
+  margin-bottom: 10px;
   padding: 5px;
+  width: calc(50% - 15px);
+
+  @media (max-width: 768px) {
+    width: calc(100% - 15px);
+  }
 `;
 
 const Button = styled.button`
   margin-right: 10px;
+  margin-bottom: 10px;
   padding: 5px 10px;
   background-color: #4CAF50;
   color: white;
   border: none;
   cursor: pointer;
+  width: calc(50% - 15px);
+
+  @media (max-width: 768px) {
+    width: calc(100% - 15px);
+  }
 
   &:hover {
     background-color: #45a049;
@@ -46,7 +67,7 @@ const DataText = styled.span`
 `;
 
 const EditFormContainer = styled.div`
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -69,15 +90,22 @@ const EditForm = styled.form`
 const EditInput = styled.input`
   margin-bottom: 10px;
   padding: 5px;
+  width: calc(100% - 20px);
 `;
 
 const EditButton = styled.button`
   margin-right: 10px;
+  margin-bottom: 10px;
   padding: 5px 10px;
   background-color: #2196F3;
   color: white;
   border: none;
   cursor: pointer;
+  width: calc(50% - 15px);
+
+  @media (max-width: 768px) {
+    width: calc(100% - 15px);
+  }
 
   &:hover {
     background-color: #0b7dda;
@@ -86,11 +114,17 @@ const EditButton = styled.button`
 
 const CancelButton = styled.button`
   margin-right: 10px;
+  margin-bottom: 10px;
   padding: 5px 10px;
   background-color: #f44336;
   color: white;
   border: none;
   cursor: pointer;
+  width: calc(50% - 15px);
+
+  @media (max-width: 768px) {
+    width: calc(100% - 15px);
+  }
 
   &:hover {
     background-color: #da190b;
@@ -98,11 +132,13 @@ const CancelButton = styled.button`
 `;
 
 const DeleteButton = styled.button`
+  margin-bottom: 10px;
   padding: 5px 10px;
   background-color: #f44336;
   color: white;
   border: none;
   cursor: pointer;
+  width: calc(100% - 20px);
 
   &:hover {
     background-color: #da190b;
@@ -287,8 +323,10 @@ const IndexedDBComponent = () => {
               <DeleteButton onClick={() => deleteData(item.id)}>Delete</DeleteButton>
             </div>
           </DataItem>
+
         ))}
       </DataList>
+      
     </Container>
   );
 };
