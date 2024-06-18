@@ -7,6 +7,7 @@ const Container = styled.div`
 
 const Form = styled.div`
   margin-bottom: 20px;
+  position: relative;
 `;
 
 const Input = styled.input`
@@ -44,6 +45,32 @@ const DataText = styled.span`
   margin-right: 10px;
 `;
 
+const EditFormContainer = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const EditForm = styled.form`
+  background-color: white;
+  padding: 20px;
+  border: 1px solid #ddd;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const EditInput = styled.input`
+  margin-bottom: 10px;
+  padding: 5px;
+`;
+
 const EditButton = styled.button`
   margin-right: 10px;
   padding: 5px 10px;
@@ -54,6 +81,19 @@ const EditButton = styled.button`
 
   &:hover {
     background-color: #0b7dda;
+  }
+`;
+
+const CancelButton = styled.button`
+  margin-right: 10px;
+  padding: 5px 10px;
+  background-color: #f44336;
+  color: white;
+  border: none;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #da190b;
   }
 `;
 
@@ -72,8 +112,12 @@ const DeleteButton = styled.button`
 const IndexedDBComponent = () => {
   const [db, setDb] = useState(null);
   const [data, setData] = useState([]);
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [editFormData, setEditFormData] = useState({
+    id: null,
+    name: '',
+    email: ''
+  });
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     const request = indexedDB.open('MyDatabase', 1);
@@ -110,13 +154,20 @@ const IndexedDBComponent = () => {
     };
   };
 
-  const addData = (data) => {
+  const addData = () => {
     const transaction = db.transaction(['MyObjectStore'], 'readwrite');
     const objectStore = transaction.objectStore('MyObjectStore');
-    const request = objectStore.add(data);
+    
+    // Generate new ID
+    const id = data.length ? data[data.length - 1].id + 1 : 1;
+    
+    const newData = { id, name: editFormData.name, email: editFormData.email };
+    
+    const request = objectStore.add(newData);
 
     request.onsuccess = () => {
       fetchData(db);
+      setEditFormData({ id: null, name: '', email: '' });
     };
 
     request.onerror = (event) => {
@@ -124,13 +175,15 @@ const IndexedDBComponent = () => {
     };
   };
 
-  const updateData = (data) => {
+  const updateData = () => {
     const transaction = db.transaction(['MyObjectStore'], 'readwrite');
     const objectStore = transaction.objectStore('MyObjectStore');
-    const request = objectStore.put(data);
+    const request = objectStore.put(editFormData);
 
     request.onsuccess = () => {
       fetchData(db);
+      setEditFormData({ id: null, name: '', email: '' });
+      setIsEditing(false);
     };
 
     request.onerror = (event) => {
@@ -138,33 +191,42 @@ const IndexedDBComponent = () => {
     };
   };
 
-  const deleteData = (key) => {
+  const handleEditData = (item) => {
+    setEditFormData({
+      id: item.id,
+      name: item.name,
+      email: item.email
+    });
+    setIsEditing(true);
+  };
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setEditFormData({
+      ...editFormData,
+      [name]: value
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditFormData({ id: null, name: '', email: '' });
+    setIsEditing(false);
+  };
+
+  const deleteData = (id) => {
     const transaction = db.transaction(['MyObjectStore'], 'readwrite');
     const objectStore = transaction.objectStore('MyObjectStore');
-    const request = objectStore.delete(key);
+    const request = objectStore.delete(id);
 
     request.onsuccess = () => {
       fetchData(db);
+      setEditFormData({ id: null, name: '', email: '' });
+      setIsEditing(false);
     };
 
     request.onerror = (event) => {
       console.error('Delete request error:', event.target.errorCode);
     };
-  };
-
-  const handleAddData = () => {
-    const id = data.length ? data[data.length - 1].id + 1 : 1; // Generate new ID
-    addData({ id, name, email });
-    setName('');
-    setEmail('');
-  };
-
-  const handleUpdateData = (id) => {
-    const updatedName = prompt('Enter new name:', name);
-    const updatedEmail = prompt('Enter new email:', email);
-    if (updatedName && updatedEmail) {
-      updateData({ id, name: updatedName, email: updatedEmail });
-    }
   };
 
   return (
@@ -174,17 +236,44 @@ const IndexedDBComponent = () => {
         <Input
           type="text"
           placeholder="Name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+          value={editFormData.name}
+          onChange={handleInputChange}
+          name="name"
         />
         <Input
           type="email"
           placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          value={editFormData.email}
+          onChange={handleInputChange}
+          name="email"
         />
-        <Button onClick={handleAddData}>Add Data</Button>
+        {!isEditing ? (
+          <Button onClick={addData}>Add Data</Button>
+        ) : null}
       </Form>
+      {isEditing && (
+        <EditFormContainer>
+          <EditForm onSubmit={(e) => { e.preventDefault(); updateData(); }}>
+            <EditInput
+              type="text"
+              name="name"
+              value={editFormData.name}
+              onChange={handleInputChange}
+              placeholder="Name"
+            />
+            <EditInput
+              type="email"
+              name="email"
+              value={editFormData.email}
+              onChange={handleInputChange}
+              placeholder="Email"
+            />
+            <EditButton type="submit">Save</EditButton>
+            <CancelButton type="button" onClick={cancelEdit}>Cancel</CancelButton>
+            <DeleteButton onClick={() => deleteData(editFormData.id)}>Delete</DeleteButton>
+          </EditForm>
+        </EditFormContainer>
+      )}
       <DataList>
         {data.map((item) => (
           <DataItem key={item.id}>
@@ -194,7 +283,7 @@ const IndexedDBComponent = () => {
               <DataText>Email: {item.email}</DataText>
             </div>
             <div>
-              <EditButton onClick={() => handleUpdateData(item.id)}>Edit</EditButton>
+              <EditButton onClick={() => handleEditData(item)}>Edit</EditButton>
               <DeleteButton onClick={() => deleteData(item.id)}>Delete</DeleteButton>
             </div>
           </DataItem>
