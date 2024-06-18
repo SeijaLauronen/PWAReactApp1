@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
 const IndexedDBComponent = () => {
-    
   const [db, setDb] = useState(null);
-  const [data, setData] = useState(null);
+  const [data, setData] = useState([]);
+  const [singleData, setSingleData] = useState(null);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
 
   useEffect(() => {
     const request = indexedDB.open('MyDatabase', 1);
@@ -16,7 +18,9 @@ const IndexedDBComponent = () => {
     };
 
     request.onsuccess = (event) => {
-      setDb(event.target.result);
+      const db = event.target.result;
+      setDb(db);
+      fetchData(db);
     };
 
     request.onerror = (event) => {
@@ -24,13 +28,27 @@ const IndexedDBComponent = () => {
     };
   }, []);
 
+  const fetchData = (dbInstance) => {
+    const transaction = dbInstance.transaction(['MyObjectStore'], 'readonly');
+    const objectStore = transaction.objectStore('MyObjectStore');
+    const request = objectStore.getAll();
+
+    request.onsuccess = (event) => {
+      setData(event.target.result);
+    };
+
+    request.onerror = (event) => {
+      console.error('Fetch request error:', event.target.errorCode);
+    };
+  };
+
   const addData = (data) => {
     const transaction = db.transaction(['MyObjectStore'], 'readwrite');
     const objectStore = transaction.objectStore('MyObjectStore');
     const request = objectStore.add(data);
 
     request.onsuccess = () => {
-      console.log('Data added to the database');
+      fetchData(db);
     };
 
     request.onerror = (event) => {
@@ -45,7 +63,7 @@ const IndexedDBComponent = () => {
 
     request.onsuccess = (event) => {
       if (request.result) {
-        setData(request.result);
+        setSingleData(request.result);
       } else {
         console.log('No data found for the key');
       }
@@ -62,7 +80,7 @@ const IndexedDBComponent = () => {
     const request = objectStore.put(data);
 
     request.onsuccess = () => {
-      console.log('Data updated in the database');
+      fetchData(db);
     };
 
     request.onerror = (event) => {
@@ -76,7 +94,7 @@ const IndexedDBComponent = () => {
     const request = objectStore.delete(key);
 
     request.onsuccess = () => {
-      console.log('Data deleted from the database');
+      fetchData(db);
     };
 
     request.onerror = (event) => {
@@ -84,19 +102,50 @@ const IndexedDBComponent = () => {
     };
   };
 
+  const handleAddData = () => {
+    const id = data.length ? data[data.length - 1].id + 1 : 1; // Generate new ID
+    addData({ id, name, email });
+    setName('');
+    setEmail('');
+  };
+
   return (
     <div>
       <h1>IndexedDB React Component</h1>
-      <button onClick={() => addData({ id: 1, name: 'John Doe', email: 'john.doe@example.com' })}>Add Data</button>
-      <button onClick={() => getData(1)}>Get Data</button>
-      <button onClick={() => updateData({ id: 1, name: 'Jane Doe', email: 'jane.doe@example.com' })}>Update Data</button>
+      <div>
+        <input
+          type="text"
+          placeholder="Name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input
+          type="email"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <button onClick={handleAddData}>Add Data</button>
+      </div>
+      <button onClick={() => getData(1)}>Get Data 1</button>
+      <button onClick={() => updateData({ id: 1, name, email })}>Update Data</button>
       <button onClick={() => deleteData(1)}>Delete Data</button>
-      {data && (
+
+      <h2>All Data:</h2>
+      <ul>
+        {data.map((item) => (
+          <li key={item.id}>
+            ID: {item.id}, Name: {item.name}, Email: {item.email}
+          </li>
+        ))}
+      </ul>
+
+      {singleData && (
         <div>
           <h2>Retrieved Data:</h2>
-          <p>ID: {data.id}</p>
-          <p>Name: {data.name}</p>
-          <p>Email: {data.email}</p>
+          <p>ID: {singleData.id}</p>
+          <p>Name: {singleData.name}</p>
+          <p>Email: {singleData.email}</p>
         </div>
       )}
     </div>
