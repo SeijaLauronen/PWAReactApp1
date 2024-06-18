@@ -5,6 +5,7 @@ import './App.css';
 import StyledButton, {FancyButton, SubmitButton} from './components/Button/Button'
 import {DarkButton} from './components/Button/Button.styles';
 import HandleFile from './components/Filehandling';
+import IndexedDBComponent from './components/DBHandling';
 
 const theme = {
   dark: {
@@ -46,7 +47,8 @@ function App() {
         <div><br/></div><div><br/></div><div><br/></div>
         <hr/>
         <HandleFile></HandleFile>
-
+        <hr/>
+        <IndexedDBComponent></IndexedDBComponent>
 
       </div>
     </ThemeProvider>
