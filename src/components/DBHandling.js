@@ -5,18 +5,10 @@ const Container = styled.div`
   padding: 20px;
 `;
 
-const FormXX = styled.div`
+const Form = styled.div`
   margin-bottom: 20px;
-  position: relative;
   display: flex;
   flex-wrap: wrap;
-  justify-content: center;
-`;
-
-const Form = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 `;
 
 const Input = styled.input`
@@ -24,10 +16,6 @@ const Input = styled.input`
   margin-bottom: 10px;
   padding: 5px;
   width: calc(50% - 15px);
-
-  @media (max-width: 768px) {
-    width: calc(100% - 15px);
-  }
 `;
 
 const Button = styled.button`
@@ -39,14 +27,6 @@ const Button = styled.button`
   border: none;
   cursor: pointer;
   width: calc(50% - 15px);
-
-  @media (max-width: 768px) {
-    width: calc(100% - 15px);
-  }
-
-  &:hover {
-    background-color: #45a049;
-  }
 `;
 
 const DataList = styled.ul`
@@ -101,15 +81,6 @@ const EditButton = styled.button`
   color: white;
   border: none;
   cursor: pointer;
-  width: calc(50% - 15px);
-
-  @media (max-width: 768px) {
-    width: calc(100% - 15px);
-  }
-
-  &:hover {
-    background-color: #0b7dda;
-  }
 `;
 
 const CancelButton = styled.button`
@@ -120,15 +91,6 @@ const CancelButton = styled.button`
   color: white;
   border: none;
   cursor: pointer;
-  width: calc(50% - 15px);
-
-  @media (max-width: 768px) {
-    width: calc(100% - 15px);
-  }
-
-  &:hover {
-    background-color: #da190b;
-  }
 `;
 
 const DeleteButton = styled.button`
@@ -138,11 +100,6 @@ const DeleteButton = styled.button`
   color: white;
   border: none;
   cursor: pointer;
-  width: calc(100% - 20px);
-
-  &:hover {
-    background-color: #da190b;
-  }
 `;
 
 const IndexedDBComponent = () => {
@@ -154,6 +111,7 @@ const IndexedDBComponent = () => {
     email: ''
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [filterName, setFilterName] = useState('');
 
   useEffect(() => {
     const request = indexedDB.open('MyDatabase', 1);
@@ -194,7 +152,6 @@ const IndexedDBComponent = () => {
     const transaction = db.transaction(['MyObjectStore'], 'readwrite');
     const objectStore = transaction.objectStore('MyObjectStore');
     
-    // Generate new ID
     const id = data.length ? data[data.length - 1].id + 1 : 1;
     
     const newData = { id, name: editFormData.name, email: editFormData.email };
@@ -265,6 +222,10 @@ const IndexedDBComponent = () => {
     };
   };
 
+  const filteredData = data.filter(item =>
+    item.name.toLowerCase().includes(filterName.toLowerCase())
+  );
+
   return (
     <Container>
       <h1>IndexedDB React Component</h1>
@@ -310,8 +271,15 @@ const IndexedDBComponent = () => {
           </EditForm>
         </EditFormContainer>
       )}
+      <Input
+        type="text"
+        placeholder="Filter by Name"
+        value={filterName}
+        onChange={(e) => setFilterName(e.target.value)}
+        style={{ marginTop: '20px' }}
+      />
       <DataList>
-        {data.map((item) => (
+        {filteredData.map((item) => (
           <DataItem key={item.id}>
             <div>
               <DataText>ID: {item.id}</DataText>
@@ -323,10 +291,8 @@ const IndexedDBComponent = () => {
               <DeleteButton onClick={() => deleteData(item.id)}>Delete</DeleteButton>
             </div>
           </DataItem>
-
         ))}
       </DataList>
-      
     </Container>
   );
 };
