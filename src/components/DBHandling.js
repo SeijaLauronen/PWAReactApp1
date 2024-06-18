@@ -6,27 +6,24 @@ const Container = styled.div`
 `;
 
 const Form = styled.div`
-  margin-bottom: 20px;
   display: flex;
-  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
 `;
+
 
 const Input = styled.input`
   margin-right: 10px;
-  margin-bottom: 10px;
   padding: 5px;
-  width: calc(50% - 15px);
+  flex: 1;
 `;
 
 const Button = styled.button`
-  margin-right: 10px;
-  margin-bottom: 10px;
   padding: 5px 10px;
   background-color: #4CAF50;
   color: white;
   border: none;
   cursor: pointer;
-  width: calc(50% - 15px);
 `;
 
 const DataList = styled.ul`
@@ -75,7 +72,6 @@ const EditInput = styled.input`
 
 const EditButton = styled.button`
   margin-right: 10px;
-  margin-bottom: 10px;
   padding: 5px 10px;
   background-color: #2196F3;
   color: white;
@@ -85,7 +81,6 @@ const EditButton = styled.button`
 
 const CancelButton = styled.button`
   margin-right: 10px;
-  margin-bottom: 10px;
   padding: 5px 10px;
   background-color: #f44336;
   color: white;
@@ -94,7 +89,6 @@ const CancelButton = styled.button`
 `;
 
 const DeleteButton = styled.button`
-  margin-bottom: 10px;
   padding: 5px 10px;
   background-color: #f44336;
   color: white;
@@ -111,7 +105,6 @@ const IndexedDBComponent = () => {
     email: ''
   });
   const [isEditing, setIsEditing] = useState(false);
-  const [filterName, setFilterName] = useState('');
 
   useEffect(() => {
     const request = indexedDB.open('MyDatabase', 1);
@@ -151,11 +144,11 @@ const IndexedDBComponent = () => {
   const addData = () => {
     const transaction = db.transaction(['MyObjectStore'], 'readwrite');
     const objectStore = transaction.objectStore('MyObjectStore');
-    
+
     const id = data.length ? data[data.length - 1].id + 1 : 1;
-    
+
     const newData = { id, name: editFormData.name, email: editFormData.email };
-    
+
     const request = objectStore.add(newData);
 
     request.onsuccess = () => {
@@ -222,9 +215,18 @@ const IndexedDBComponent = () => {
     };
   };
 
-  const filteredData = data.filter(item =>
-    item.name.toLowerCase().includes(filterName.toLowerCase())
+  /*
+  const filteredDataXYZ = data.filter(item =>
+    item.name.toLowerCase().includes(editFormData.name.toLowerCase())
   );
+ */
+  const filteredData = data.filter(item => {
+    const isIncluded = item.name.toLowerCase().includes(editFormData.name.toLowerCase());
+    console.log(`Item ${item.id} (${item.name}): ${isIncluded ? 'included' : 'excluded'}`);
+    return isIncluded;
+});
+
+
 
   return (
     <Container>
@@ -232,21 +234,12 @@ const IndexedDBComponent = () => {
       <Form>
         <Input
           type="text"
-          placeholder="Name"
+          placeholder="Enter Name"
           value={editFormData.name}
           onChange={handleInputChange}
           name="name"
         />
-        <Input
-          type="email"
-          placeholder="Email"
-          value={editFormData.email}
-          onChange={handleInputChange}
-          name="email"
-        />
-        {!isEditing ? (
-          <Button onClick={addData}>Add Data</Button>
-        ) : null}
+        <Button onClick={addData}>Add Data</Button>
       </Form>
       {isEditing && (
         <EditFormContainer>
@@ -271,13 +264,6 @@ const IndexedDBComponent = () => {
           </EditForm>
         </EditFormContainer>
       )}
-      <Input
-        type="text"
-        placeholder="Filter by Name"
-        value={filterName}
-        onChange={(e) => setFilterName(e.target.value)}
-        style={{ marginTop: '20px' }}
-      />
       <DataList>
         {filteredData.map((item) => (
           <DataItem key={item.id}>
