@@ -3,7 +3,8 @@ import {ThemeProvider, createGlobalStyle} from 'styled-components'
 import './App.css';
 //Jostain syystä valittaa tästä, että on jo importattu, mutta pienellä kirjaimella button
 import StyledButton, {FancyButton, SubmitButton} from './components/Button/Button'
-import {DarkButton} from './components/Button/Button.styles'
+import {DarkButton} from './components/Button/Button.styles';
+import HandleFile from './components/Filehandling';
 
 const theme = {
   dark: {
@@ -42,7 +43,11 @@ function App() {
         <SubmitButton>SubmitButton</SubmitButton>
         <div><br/></div>
         <DarkButton>DarkButton</DarkButton>
-        
+        <div><br/></div><div><br/></div><div><br/></div>
+        <hr/>
+        <HandleFile></HandleFile>
+
+
       </div>
     </ThemeProvider>
   );
