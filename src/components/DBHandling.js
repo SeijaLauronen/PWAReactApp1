@@ -160,12 +160,12 @@ const IndexedDBComponent = () => {
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
       const peopleStore = db.createObjectStore('PeopleStore', { keyPath: 'id' });
-      peopleStore.createIndex('name', 'name', { unique: false });
-      peopleStore.createIndex('email', 'email', { unique: true });
-      peopleStore.createIndex('city', 'city', { unique: false });
+      //peopleStore.createIndex('name', 'name', { unique: false });
+      //peopleStore.createIndex('email', 'email', { unique: true });
+      //peopleStore.createIndex('city', 'city', { unique: false });
 
       const cityStore = db.createObjectStore('CityStore', { keyPath: 'id' });
-      cityStore.createIndex('name', 'name', { unique: true });
+      //cityStore.createIndex('name', 'name', { unique: true });
     };
 
     request.onsuccess = (event) => {
@@ -219,8 +219,8 @@ const IndexedDBComponent = () => {
     const transaction = db.transaction(['PeopleStore'], 'readwrite');
     const objectStore = transaction.objectStore('PeopleStore');
     const id = data.length ? data[data.length - 1].id + 1 : 1;
-    //const newData = { id, name: filterName, email: '', city: '' };
-    const newData = { id, name: filterName, email: id, city: '' };
+    const newData = { id, name: filterName, email: '', city: '' }; //alkuperäinen
+    //const newData = { id, name: filterName, email: id, city: '' }; //jos oli tehty indeksi sähköpostille
   
     const request = objectStore.add(newData);
   
