@@ -152,6 +152,7 @@ const IndexedDBComponent = () => {
   const [isCityEditing, setIsCityEditing] = useState(false);
   const [accordionOpen, setAccordionOpen] = useState({});
   const [view, setView] = useState('people'); // Default view is 'people'
+  const [filterName, setFilterName] = useState('');
 
   useEffect(() => {
     const request = indexedDB.open('MyDatabase', 1);
@@ -207,12 +208,107 @@ const IndexedDBComponent = () => {
     };
   };
 
+
+
   const addData = () => {
+    if (!db) {
+      console.error('Database connection is not available.');
+      return;
+    }
+  
     const transaction = db.transaction(['PeopleStore'], 'readwrite');
     const objectStore = transaction.objectStore('PeopleStore');
     const id = data.length ? data[data.length - 1].id + 1 : 1;
-    const newData = { id, name: editFormData.name, email: editFormData.email, city: editFormData.city };
+    //const newData = { id, name: filterName, email: '', city: '' };
+    const newData = { id, name: filterName, email: id, city: '' };
+  
+    const request = objectStore.add(newData);
+  
+    request.onsuccess = () => {
+      console.log('Data added successfully.');
+      fetchData(db);
+      setEditFormData({ id: null, name: '', email: '', city: '' });
+    };
+  
+    request.onerror = (event) => {
+      console.error('Add request error:', event.target.error);
+    };
+  
+    transaction.oncomplete = () => {
+      console.log('Transaction completed.');
+    };
+  
+    transaction.onerror = (event) => {
+      console.error('Transaction error:', event.target.error);
+    };
+  };
 
+
+
+  const addDataXYZ3 = () => {
+    const transaction = db.transaction(['PeopleStore'], 'readwrite');
+    const objectStore = transaction.objectStore('PeopleStore');
+    const id = data.length ? data[data.length - 1].id + 1 : 1;
+    const newData = { id, name: filterName, email: '', city: '' };
+  
+    const request = objectStore.add(newData);
+  
+    request.onsuccess = () => {
+      console.log('Data added successfully.');
+      fetchData(db);
+      setEditFormData({ id: null, name: '', email: '', city: '' });
+    };
+  
+    request.onerror = (event) => {
+      console.error('Add request error:', event.target.error);
+    };
+  
+    transaction.oncomplete = () => {
+      console.log('Transaction completed.');
+    };
+  
+    transaction.onerror = (event) => {
+      console.error('Transaction error:', event.target.error);
+    };
+  };
+
+  const addDataXYZ2 = () => {
+    const transaction = db.transaction(['PeopleStore'], 'readwrite');
+    const objectStore = transaction.objectStore('PeopleStore');
+    const id = data.length ? data[data.length - 1].id + 1 : 1;
+    const newData = { id, name: filterName, email: '', city: '' };
+  
+    const request = objectStore.add(newData);
+  
+    request.onsuccess = () => {
+      fetchData(db);
+      setEditFormData({ id: null, name: '', email: '', city: '' });
+    };
+  
+    request.onerror = (event) => {
+      console.error('Add request error:', event.target.errorCode);
+    };
+  
+    transaction.oncomplete = () => {
+      console.log('Transaction completed.');
+    };
+  
+    transaction.onerror = (event) => {
+      console.error('Transaction error:', event.target.errorCode);
+    };
+  };
+  
+
+  
+  const addDataXYZ = () => {
+    console.log(filterName)
+    const transaction = db.transaction(['PeopleStore'], 'readwrite');
+    const objectStore = transaction.objectStore('PeopleStore');
+    const id = data.length ? data[data.length - 1].id + 1 : 1;
+    //const newData = { id, name: editFormData.name, email: '', city: '' }; //alkuperäinen
+    //const newData = { id, name: editFormData.name, email: 'jotain@jotain', city: 'Ei tiedossa' };//datahan ei ole eidtformdatalla, vaan se on filterName
+    const newData = { id, name: filterName, email: '', city: '' };//Ei toimi, lisäsin name=people
+    //const newData = { id, name: people.value, email: 'jotain@jotain.com', city: 'Ei tiedossa' };
     const request = objectStore.add(newData);
 
     request.onsuccess = () => {
@@ -221,7 +317,8 @@ const IndexedDBComponent = () => {
     };
 
     request.onerror = (event) => {
-      console.error('Add request error:', event.target.errorCode);
+      //console.error('Add request error:', event.target.errorCode); //TODO alkuperäinen
+      console.log('Add request error:', event.target.errorCode);
     };
   };
 
@@ -297,6 +394,10 @@ const IndexedDBComponent = () => {
     setCityName(e.target.value);
   };
 
+  const handleFilterChange = (e) => {
+    setFilterName(e.target.value);
+  };
+
   const cancelEdit = () => {
     setEditFormData({ id: null, name: '', email: '', city: '' });
     setIsEditing(false);
@@ -331,7 +432,7 @@ const IndexedDBComponent = () => {
   };
 
   const filteredData = data.filter(item =>
-    item.name.toLowerCase().includes(editFormData.name.toLowerCase())
+    item.name.toLowerCase().includes(filterName.toLowerCase())
   );
 
   const renderPeopleView = () => (
@@ -339,26 +440,11 @@ const IndexedDBComponent = () => {
       <Form>
         <Input
           type="text"
-          placeholder="Name"
-          name="name"
-          value={editFormData.name}
-          onChange={handleInputChange}
+          placeholder="Filter by Name"
+          value={filterName}
+          onChange={handleFilterChange}
         />
-        <Input
-          type="email"
-          placeholder="Email"
-          name="email"
-          value={editFormData.email}
-          onChange={handleInputChange}
-        />
-        <Input
-          type="text"
-          placeholder="City"
-          name="city"
-          value={editFormData.city}
-          onChange={handleInputChange}
-        />
-        <Button onClick={addData}>Add Data</Button>
+        <Button onClick={addData}>Add Name</Button>
       </Form>
       <Accordion>
         {cities.map(city => (
@@ -375,7 +461,6 @@ const IndexedDBComponent = () => {
                       <div>
                         <DataText>ID: {item.id}</DataText>
                         <DataText>Name: {item.name}</DataText>
-                        <DataText>Email: {item.email}</DataText>
                       </div>
                       <div>
                         <Button onClick={() => handleEditData(item)}>Edit</Button>
