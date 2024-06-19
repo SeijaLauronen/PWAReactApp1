@@ -36,3 +36,12 @@
     transform: rotate(360deg);
   }
 }
+
+/* Itse lisätty: */
+ul {
+  padding-left: 0;
+  list-style-type:decimal
+}
+li {
+  text-align: left;
+}

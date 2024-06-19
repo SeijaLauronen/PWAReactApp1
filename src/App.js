@@ -31,10 +31,15 @@ function App() {
     <ThemeProvider theme={theme}>
       <GlobalStyle />
       <div className="App">
-        <p>ReactPWA 2 ServiceWorker</p>
-        <p>
+        <br/>
+        <br/>
+        <br/>
+        <h1>Kokeilu: React PWA </h1>
+        <hr/>
+        <h2> Styled komponent Buttoneita</h2>  
+        <div>
         <button>Button</button>
-        </p>
+        </div>
         <StyledButton type='submit'>Styled Button</StyledButton>
         <div><br/></div>
         <StyledButton variant='outline'>Styled Button, outline</StyledButton>

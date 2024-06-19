@@ -584,7 +584,20 @@ const IndexedDBComponent = () => {
   return (
     <Container>
       <h1>IndexedDB React Component</h1>
-
+      
+      <h2>Ohje, kun tämä vielä ihan kesken:</h2>
+      <h3>Idea: Lista on haitarityyppinen, mutta muotoilu kesken. Eli kun klikkaat kaupungin nimeä, sen alle listautuu siinä kaupungissa asuvat ihmiset</h3>
+      
+      <ul>
+        
+        <li>Aloita tästä: Ihan ekana valitse Manage Cities ja paina "Add City", niin että tulee tyhjä kaupunki. </li>
+        <li>Lisää sitten vaikka joku oikee kaupunki</li>
+        <li>Valitse sitten Manage people ja lisää jokin nimi "Add Name" painikkeella. Nimi tulee näkyviin alla olevaan listaan, kun klikkaat harmaata palkkia, joka on "nimetön kaupunki"</li>
+        <li>Lisää sitten aina nimi, ja kun editoit, voit antaa jonkin kaupungin nimen, joka on jo annettu. Jos annat kaupungin, jota ei ole, nimi ei näy listalla ennkuin lisäät kaupungin</li>
+        <li>Huomaa että nimi toimii myös filtterinä, Add name painike ei vielä tyhjennä kenttää</li>
+        
+      </ul>
+    <hr/>
       {/* Lisätty Menu*/}
       <Menu onDeleteDatabase={handleDeleteDatabase} />
       {/* Muu sisältö ja renderöinti tässä */}

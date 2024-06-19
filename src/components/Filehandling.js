@@ -9,7 +9,7 @@ const HandleFile = () => {
   
     const file = event.target.files[0];
     console.log(event.target);
-    alert(event.target); //TEMP
+    
     if (file) {
     
       const reader = new FileReader();
