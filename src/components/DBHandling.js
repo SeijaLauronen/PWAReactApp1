@@ -6,11 +6,10 @@ const Container = styled.div`
 `;
 
 const Form = styled.div`
+  margin-bottom: 20px;
   display: flex;
-  justify-content: space-between;
   align-items: center;
 `;
-
 
 const Input = styled.input`
   margin-right: 10px;
@@ -24,6 +23,9 @@ const Button = styled.button`
   color: white;
   border: none;
   cursor: pointer;
+  &:hover {
+    background-color: #45a049;
+  }
 `;
 
 const DataList = styled.ul`
@@ -96,30 +98,80 @@ const DeleteButton = styled.button`
   cursor: pointer;
 `;
 
+const LinkButton = styled.button`
+  padding: 5px 10px;
+  background-color: #008CBA;
+  color: white;
+  border: none;
+  cursor: pointer;
+  margin-bottom: 20px;
+  &:hover {
+    background-color: #007bb5;
+  }
+`;
+
+const CityFormContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const Accordion = styled.div`
+  margin-bottom: 20px;
+`;
+
+const AccordionItem = styled.div`
+  background-color: #f1f1f1;
+  border: 1px solid #ddd;
+  margin-bottom: 10px;
+`;
+
+const AccordionTitle = styled.div`
+  cursor: pointer;
+  padding: 10px;
+  font-weight: bold;
+`;
+
+const AccordionContent = styled.div`
+  padding: 10px;
+  display: ${({ isOpen }) => (isOpen ? 'block' : 'none')};
+`;
+
 const IndexedDBComponent = () => {
   const [db, setDb] = useState(null);
   const [data, setData] = useState([]);
   const [editFormData, setEditFormData] = useState({
     id: null,
     name: '',
-    email: ''
+    email: '',
+    city: ''
   });
   const [isEditing, setIsEditing] = useState(false);
+  const [cityName, setCityName] = useState('');
+  const [cities, setCities] = useState([]);
+  const [isCityEditing, setIsCityEditing] = useState(false);
+  const [accordionOpen, setAccordionOpen] = useState({});
+  const [view, setView] = useState('people'); // Default view is 'people'
 
   useEffect(() => {
     const request = indexedDB.open('MyDatabase', 1);
 
     request.onupgradeneeded = (event) => {
       const db = event.target.result;
-      const objectStore = db.createObjectStore('MyObjectStore', { keyPath: 'id' });
-      objectStore.createIndex('name', 'name', { unique: false });
-      objectStore.createIndex('email', 'email', { unique: true });
+      const peopleStore = db.createObjectStore('PeopleStore', { keyPath: 'id' });
+      peopleStore.createIndex('name', 'name', { unique: false });
+      peopleStore.createIndex('email', 'email', { unique: true });
+      peopleStore.createIndex('city', 'city', { unique: false });
+
+      const cityStore = db.createObjectStore('CityStore', { keyPath: 'id' });
+      cityStore.createIndex('name', 'name', { unique: true });
     };
 
     request.onsuccess = (event) => {
       const db = event.target.result;
       setDb(db);
       fetchData(db);
+      fetchCities(db);
     };
 
     request.onerror = (event) => {
@@ -128,8 +180,8 @@ const IndexedDBComponent = () => {
   }, []);
 
   const fetchData = (dbInstance) => {
-    const transaction = dbInstance.transaction(['MyObjectStore'], 'readonly');
-    const objectStore = transaction.objectStore('MyObjectStore');
+    const transaction = dbInstance.transaction(['PeopleStore'], 'readonly');
+    const objectStore = transaction.objectStore('PeopleStore');
     const request = objectStore.getAll();
 
     request.onsuccess = (event) => {
@@ -141,19 +193,31 @@ const IndexedDBComponent = () => {
     };
   };
 
+  const fetchCities = (dbInstance) => {
+    const transaction = dbInstance.transaction(['CityStore'], 'readonly');
+    const objectStore = transaction.objectStore('CityStore');
+    const request = objectStore.getAll();
+
+    request.onsuccess = (event) => {
+      setCities(event.target.result);
+    };
+
+    request.onerror = (event) => {
+      console.error('Fetch cities request error:', event.target.errorCode);
+    };
+  };
+
   const addData = () => {
-    const transaction = db.transaction(['MyObjectStore'], 'readwrite');
-    const objectStore = transaction.objectStore('MyObjectStore');
-
+    const transaction = db.transaction(['PeopleStore'], 'readwrite');
+    const objectStore = transaction.objectStore('PeopleStore');
     const id = data.length ? data[data.length - 1].id + 1 : 1;
-
-    const newData = { id, name: editFormData.name, email: editFormData.email };
+    const newData = { id, name: editFormData.name, email: editFormData.email, city: editFormData.city };
 
     const request = objectStore.add(newData);
 
     request.onsuccess = () => {
       fetchData(db);
-      setEditFormData({ id: null, name: '', email: '' });
+      setEditFormData({ id: null, name: '', email: '', city: '' });
     };
 
     request.onerror = (event) => {
@@ -161,14 +225,32 @@ const IndexedDBComponent = () => {
     };
   };
 
+  const addCity = () => {
+    const transaction = db.transaction(['CityStore'], 'readwrite');
+    const objectStore = transaction.objectStore('CityStore');
+    const id = cities.length ? cities[cities.length - 1].id + 1 : 1;
+    const newCity = { id, name: cityName };
+
+    const request = objectStore.add(newCity);
+
+    request.onsuccess = () => {
+      fetchCities(db);
+      setCityName('');
+    };
+
+    request.onerror = (event) => {
+      console.error('Add city request error:', event.target.errorCode);
+    };
+  };
+
   const updateData = () => {
-    const transaction = db.transaction(['MyObjectStore'], 'readwrite');
-    const objectStore = transaction.objectStore('MyObjectStore');
+    const transaction = db.transaction(['PeopleStore'], 'readwrite');
+    const objectStore = transaction.objectStore('PeopleStore');
     const request = objectStore.put(editFormData);
 
     request.onsuccess = () => {
       fetchData(db);
-      setEditFormData({ id: null, name: '', email: '' });
+      setEditFormData({ id: null, name: '', email: '', city: '' });
       setIsEditing(false);
     };
 
@@ -177,11 +259,28 @@ const IndexedDBComponent = () => {
     };
   };
 
+  const updateCity = (city) => {
+    const transaction = db.transaction(['CityStore'], 'readwrite');
+    const objectStore = transaction.objectStore('CityStore');
+    const request = objectStore.put(city);
+
+    request.onsuccess = () => {
+      fetchCities(db);
+      setCityName('');
+      setIsCityEditing(false);
+    };
+
+    request.onerror = (event) => {
+      console.error('Update city request error:', event.target.errorCode);
+    };
+  };
+
   const handleEditData = (item) => {
     setEditFormData({
       id: item.id,
       name: item.name,
-      email: item.email
+      email: item.email,
+      city: item.city
     });
     setIsEditing(true);
   };
@@ -194,20 +293,22 @@ const IndexedDBComponent = () => {
     });
   };
 
+  const handleCityChange = (e) => {
+    setCityName(e.target.value);
+  };
+
   const cancelEdit = () => {
-    setEditFormData({ id: null, name: '', email: '' });
+    setEditFormData({ id: null, name: '', email: '', city: '' });
     setIsEditing(false);
   };
 
   const deleteData = (id) => {
-    const transaction = db.transaction(['MyObjectStore'], 'readwrite');
-    const objectStore = transaction.objectStore('MyObjectStore');
+    const transaction = db.transaction(['PeopleStore'], 'readwrite');
+    const objectStore = transaction.objectStore('PeopleStore');
     const request = objectStore.delete(id);
 
     request.onsuccess = () => {
       fetchData(db);
-      setEditFormData({ id: null, name: '', email: '' });
-      setIsEditing(false);
     };
 
     request.onerror = (event) => {
@@ -215,70 +316,165 @@ const IndexedDBComponent = () => {
     };
   };
 
-  /*
-  const filteredDataXYZ = data.filter(item =>
+  const deleteCity = (id) => {
+    const transaction = db.transaction(['CityStore'], 'readwrite');
+    const objectStore = transaction.objectStore('CityStore');
+    const request = objectStore.delete(id);
+
+    request.onsuccess = () => {
+      fetchCities(db);
+    };
+
+    request.onerror = (event) => {
+      console.error('Delete city request error:', event.target.errorCode);
+    };
+  };
+
+  const filteredData = data.filter(item =>
     item.name.toLowerCase().includes(editFormData.name.toLowerCase())
   );
- */
-  const filteredData = data.filter(item => {
-    const isIncluded = item.name.toLowerCase().includes(editFormData.name.toLowerCase());
-    console.log(`Item ${item.id} (${item.name}): ${isIncluded ? 'included' : 'excluded'}`);
-    return isIncluded;
-});
 
-
-
-  return (
-    <Container>
-      <h1>IndexedDB React Component</h1>
+  const renderPeopleView = () => (
+    <>
       <Form>
         <Input
           type="text"
-          placeholder="Enter Name"
+          placeholder="Name"
+          name="name"
           value={editFormData.name}
           onChange={handleInputChange}
-          name="name"
+        />
+        <Input
+          type="email"
+          placeholder="Email"
+          name="email"
+          value={editFormData.email}
+          onChange={handleInputChange}
+        />
+        <Input
+          type="text"
+          placeholder="City"
+          name="city"
+          value={editFormData.city}
+          onChange={handleInputChange}
         />
         <Button onClick={addData}>Add Data</Button>
       </Form>
+      <Accordion>
+        {cities.map(city => (
+          <AccordionItem key={city.id}>
+            <AccordionTitle onClick={() => setAccordionOpen(prev => ({ ...prev, [city.id]: !prev[city.id] }))}>
+              {city.name}
+            </AccordionTitle>
+            <AccordionContent isOpen={accordionOpen[city.id]}>
+              <DataList>
+                {filteredData
+                  .filter(person => person.city === city.name)
+                  .map(item => (
+                    <DataItem key={item.id}>
+                      <div>
+                        <DataText>ID: {item.id}</DataText>
+                        <DataText>Name: {item.name}</DataText>
+                        <DataText>Email: {item.email}</DataText>
+                      </div>
+                      <div>
+                        <Button onClick={() => handleEditData(item)}>Edit</Button>
+                      </div>
+                    </DataItem>
+                  ))}
+              </DataList>
+            </AccordionContent>
+          </AccordionItem>
+        ))}
+      </Accordion>
       {isEditing && (
         <EditFormContainer>
-          <EditForm onSubmit={(e) => { e.preventDefault(); updateData(); }}>
+          <EditForm onSubmit={updateData}>
             <EditInput
               type="text"
+              placeholder="Name"
               name="name"
               value={editFormData.name}
               onChange={handleInputChange}
-              placeholder="Name"
             />
             <EditInput
               type="email"
+              placeholder="Email"
               name="email"
               value={editFormData.email}
               onChange={handleInputChange}
-              placeholder="Email"
             />
-            <EditButton type="submit">Save</EditButton>
-            <CancelButton type="button" onClick={cancelEdit}>Cancel</CancelButton>
-            <DeleteButton onClick={() => deleteData(editFormData.id)}>Delete</DeleteButton>
+            <EditInput
+              type="text"
+              placeholder="City"
+              name="city"
+              value={editFormData.city}
+              onChange={handleInputChange}
+            />
+            <div>
+              <EditButton type="submit">Save</EditButton>
+              <CancelButton type="button" onClick={cancelEdit}>Cancel</CancelButton>
+              <DeleteButton type="button" onClick={() => deleteData(editFormData.id)}>Delete</DeleteButton>
+            </div>
           </EditForm>
         </EditFormContainer>
       )}
+    </>
+  );
+
+  const renderCitiesView = () => (
+    <CityFormContainer>
+      <Form>
+        <Input
+          type="text"
+          placeholder="City"
+          value={cityName}
+          onChange={handleCityChange}
+        />
+        <Button onClick={addCity}>Add City</Button>
+      </Form>
       <DataList>
-        {filteredData.map((item) => (
-          <DataItem key={item.id}>
+        {cities.map(city => (
+          <DataItem key={city.id}>
             <div>
-              <DataText>ID: {item.id}</DataText>
-              <DataText>Name: {item.name}</DataText>
-              <DataText>Email: {item.email}</DataText>
+              <DataText>ID: {city.id}</DataText>
+              <DataText>Name: {city.name}</DataText>
             </div>
             <div>
-              <EditButton onClick={() => handleEditData(item)}>Edit</EditButton>
-              <DeleteButton onClick={() => deleteData(item.id)}>Delete</DeleteButton>
+              <Button onClick={() => {
+                setCityName(city.name);
+                setIsCityEditing(true);
+              }}>Edit</Button>
+              <DeleteButton onClick={() => deleteCity(city.id)}>Delete</DeleteButton>
             </div>
           </DataItem>
         ))}
       </DataList>
+      {isCityEditing && (
+        <EditFormContainer>
+          <EditForm onSubmit={() => updateCity({ id: cities.find(city => city.name === cityName).id, name: cityName })}>
+            <EditInput
+              type="text"
+              placeholder="City"
+              value={cityName}
+              onChange={handleCityChange}
+            />
+            <div>
+              <EditButton type="submit">Save</EditButton>
+              <CancelButton type="button" onClick={() => setIsCityEditing(false)}>Cancel</CancelButton>
+            </div>
+          </EditForm>
+        </EditFormContainer>
+      )}
+    </CityFormContainer>
+  );
+
+  return (
+    <Container>
+      <h1>IndexedDB React Component</h1>
+      <LinkButton onClick={() => setView('people')}>Manage People</LinkButton>
+      <LinkButton onClick={() => setView('cities')}>Manage Cities</LinkButton>
+      {view === 'people' ? renderPeopleView() : renderCitiesView()}
     </Container>
   );
 };
