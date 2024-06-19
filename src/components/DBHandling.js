@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
+import Menu from './Menu';
 
 const Container = styled.div`
   padding: 20px;
@@ -179,6 +180,32 @@ const IndexedDBComponent = () => {
       console.error('Database error:', event.target.errorCode);
     };
   }, []);
+
+
+
+//Käsin lisätty
+  const handleDeleteDatabase = () => {
+    if (db) {
+      db.close(); // Sulje ensin tietokantayhteys
+      const deleteRequest = indexedDB.deleteDatabase('MyDatabase');
+
+      deleteRequest.onsuccess = () => {
+        console.log('Database deleted successfully.');
+        setDb(null);
+        setData([]);
+        setCities([]);
+        setEditFormData({ id: null, name: '', email: '', city: '' });
+      };
+
+      deleteRequest.onerror = (event) => {
+        console.error('Error deleting database:', event.target.errorCode);
+      };
+    }
+  };
+
+
+
+
 
   const fetchData = (dbInstance) => {
     const transaction = dbInstance.transaction(['PeopleStore'], 'readonly');
@@ -557,6 +584,11 @@ const IndexedDBComponent = () => {
   return (
     <Container>
       <h1>IndexedDB React Component</h1>
+
+      {/* Lisätty Menu*/}
+      <Menu onDeleteDatabase={handleDeleteDatabase} />
+      {/* Muu sisältö ja renderöinti tässä */}
+
       <LinkButton onClick={() => setView('people')}>Manage People</LinkButton>
       <LinkButton onClick={() => setView('cities')}>Manage Cities</LinkButton>
       {view === 'people' ? renderPeopleView() : renderCitiesView()}
