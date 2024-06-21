@@ -99,18 +99,6 @@ const DeleteButton = styled.button`
   cursor: pointer;
 `;
 
-const LinkButton = styled.button`
-  padding: 5px 10px;
-  background-color: #008CBA;
-  color: white;
-  border: none;
-  cursor: pointer;
-  margin-bottom: 20px;
-  &:hover {
-    background-color: #007bb5;
-  }
-`;
-
 const CityFormContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -138,8 +126,56 @@ const AccordionContent = styled.div`
   display: ${({ isOpen }) => (isOpen ? 'block' : 'none')};
 `;
 
+let db;
+
+const openDatabase = () => {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open('MyDatabase', 1);
+
+    request.onupgradeneeded = (event) => {
+      db = event.target.result;
+      const peopleStore = db.createObjectStore('PeopleStore', { keyPath: 'id' });
+      peopleStore.createIndex('name', 'name', { unique: false });
+      peopleStore.createIndex('email', 'email', { unique: true });
+      peopleStore.createIndex('city', 'city', { unique: false });
+
+      const cityStore = db.createObjectStore('CityStore', { keyPath: 'id' });
+      cityStore.createIndex('name', 'name', { unique: false });
+    };
+
+    request.onsuccess = (event) => {
+      db = event.target.result;
+      resolve(db);
+    };
+
+    request.onerror = (event) => {
+      reject(event.target.errorCode);
+    };
+  });
+};
+
+const handleDeleteDatabase = async () => {
+  const request = indexedDB.deleteDatabase('MyDatabase');
+  request.onsuccess = async () => {
+    console.log('Database deleted successfully');
+    db = await openDatabase();
+  };
+  request.onerror = (event) => {
+    console.error('Error deleting database:', event.target.errorCode);
+  };
+};
+
 const IndexedDBComponent = () => {
-  const [db, setDb] = useState(null);
+  useEffect(() => {
+    openDatabase().then((dbInstance) => {
+      db = dbInstance;
+      fetchData(db);
+      fetchCities(db);
+    }).catch((error) => {
+      console.error('Error opening database:', error);
+    });
+  }, []);
+
   const [data, setData] = useState([]);
   const [editFormData, setEditFormData] = useState({
     id: null,
@@ -152,60 +188,8 @@ const IndexedDBComponent = () => {
   const [cities, setCities] = useState([]);
   const [isCityEditing, setIsCityEditing] = useState(false);
   const [accordionOpen, setAccordionOpen] = useState({});
-  const [view, setView] = useState('people'); // Default view is 'people'
+  const [view, setView] = useState('people');
   const [filterName, setFilterName] = useState('');
-
-  useEffect(() => {
-    const request = indexedDB.open('MyDatabase', 1);
-
-    request.onupgradeneeded = (event) => {
-      const db = event.target.result;
-      const peopleStore = db.createObjectStore('PeopleStore', { keyPath: 'id' });
-      //peopleStore.createIndex('name', 'name', { unique: false });
-      //peopleStore.createIndex('email', 'email', { unique: true });
-      //peopleStore.createIndex('city', 'city', { unique: false });
-
-      const cityStore = db.createObjectStore('CityStore', { keyPath: 'id' });
-      //cityStore.createIndex('name', 'name', { unique: true });
-    };
-
-    request.onsuccess = (event) => {
-      const db = event.target.result;
-      setDb(db);
-      fetchData(db);
-      fetchCities(db);
-    };
-
-    request.onerror = (event) => {
-      console.error('Database error:', event.target.errorCode);
-    };
-  }, []);
-
-
-
-//Käsin lisätty
-  const handleDeleteDatabase = () => {
-    if (db) {
-      db.close(); // Sulje ensin tietokantayhteys
-      const deleteRequest = indexedDB.deleteDatabase('MyDatabase');
-
-      deleteRequest.onsuccess = () => {
-        console.log('Database deleted successfully.');
-        setDb(null);
-        setData([]);
-        setCities([]);
-        setEditFormData({ id: null, name: '', email: '', city: '' });
-      };
-
-      deleteRequest.onerror = (event) => {
-        console.error('Error deleting database:', event.target.errorCode);
-      };
-    }
-  };
-
-
-
-
 
   const fetchData = (dbInstance) => {
     const transaction = dbInstance.transaction(['PeopleStore'], 'readonly');
@@ -235,121 +219,44 @@ const IndexedDBComponent = () => {
     };
   };
 
-
-
   const addData = () => {
     if (!db) {
       console.error('Database connection is not available.');
       return;
     }
-  
+
     const transaction = db.transaction(['PeopleStore'], 'readwrite');
     const objectStore = transaction.objectStore('PeopleStore');
     const id = data.length ? data[data.length - 1].id + 1 : 1;
-    const newData = { id, name: filterName, email: '', city: '' }; //alkuperäinen
-    //const newData = { id, name: filterName, email: id, city: '' }; //jos oli tehty indeksi sähköpostille
-  
+    const newData = { id, name: filterName, email: '', city: '' };
+
     const request = objectStore.add(newData);
-  
+
     request.onsuccess = () => {
       console.log('Data added successfully.');
       fetchData(db);
       setEditFormData({ id: null, name: '', email: '', city: '' });
     };
-  
+
     request.onerror = (event) => {
       console.error('Add request error:', event.target.error);
     };
-  
+
     transaction.oncomplete = () => {
       console.log('Transaction completed.');
     };
-  
+
     transaction.onerror = (event) => {
       console.error('Transaction error:', event.target.error);
-    };
-  };
-
-
-
-  const addDataXYZ3 = () => {
-    const transaction = db.transaction(['PeopleStore'], 'readwrite');
-    const objectStore = transaction.objectStore('PeopleStore');
-    const id = data.length ? data[data.length - 1].id + 1 : 1;
-    const newData = { id, name: filterName, email: '', city: '' };
-  
-    const request = objectStore.add(newData);
-  
-    request.onsuccess = () => {
-      console.log('Data added successfully.');
-      fetchData(db);
-      setEditFormData({ id: null, name: '', email: '', city: '' });
-    };
-  
-    request.onerror = (event) => {
-      console.error('Add request error:', event.target.error);
-    };
-  
-    transaction.oncomplete = () => {
-      console.log('Transaction completed.');
-    };
-  
-    transaction.onerror = (event) => {
-      console.error('Transaction error:', event.target.error);
-    };
-  };
-
-  const addDataXYZ2 = () => {
-    const transaction = db.transaction(['PeopleStore'], 'readwrite');
-    const objectStore = transaction.objectStore('PeopleStore');
-    const id = data.length ? data[data.length - 1].id + 1 : 1;
-    const newData = { id, name: filterName, email: '', city: '' };
-  
-    const request = objectStore.add(newData);
-  
-    request.onsuccess = () => {
-      fetchData(db);
-      setEditFormData({ id: null, name: '', email: '', city: '' });
-    };
-  
-    request.onerror = (event) => {
-      console.error('Add request error:', event.target.errorCode);
-    };
-  
-    transaction.oncomplete = () => {
-      console.log('Transaction completed.');
-    };
-  
-    transaction.onerror = (event) => {
-      console.error('Transaction error:', event.target.errorCode);
-    };
-  };
-  
-
-  
-  const addDataXYZ = () => {
-    console.log(filterName)
-    const transaction = db.transaction(['PeopleStore'], 'readwrite');
-    const objectStore = transaction.objectStore('PeopleStore');
-    const id = data.length ? data[data.length - 1].id + 1 : 1;
-    //const newData = { id, name: editFormData.name, email: '', city: '' }; //alkuperäinen
-    //const newData = { id, name: editFormData.name, email: 'jotain@jotain', city: 'Ei tiedossa' };//datahan ei ole eidtformdatalla, vaan se on filterName
-    const newData = { id, name: filterName, email: '', city: '' };//Ei toimi, lisäsin name=people
-    //const newData = { id, name: people.value, email: 'jotain@jotain.com', city: 'Ei tiedossa' };
-    const request = objectStore.add(newData);
-
-    request.onsuccess = () => {
-      fetchData(db);
-      setEditFormData({ id: null, name: '', email: '', city: '' });
-    };
-
-    request.onerror = (event) => {
-      //console.error('Add request error:', event.target.errorCode); //TODO alkuperäinen
-      console.log('Add request error:', event.target.errorCode);
     };
   };
 
   const addCity = () => {
+    if (!db) {
+      console.error('Database connection is not available.');
+      return;
+    }
+
     const transaction = db.transaction(['CityStore'], 'readwrite');
     const objectStore = transaction.objectStore('CityStore');
     const id = cities.length ? cities[cities.length - 1].id + 1 : 1;
@@ -365,6 +272,14 @@ const IndexedDBComponent = () => {
     request.onerror = (event) => {
       console.error('Add city request error:', event.target.errorCode);
     };
+
+    transaction.oncomplete = () => {
+      console.log('Transaction completed.');
+    };
+
+    transaction.onerror = (event) => {
+      console.error('Transaction error:', event.target.error);
+    };
   };
 
   const updateData = () => {
@@ -379,55 +294,8 @@ const IndexedDBComponent = () => {
     };
 
     request.onerror = (event) => {
-      console.error('Update request error:', event.target.errorCode);
+      console.error('Update request error:', event.target.error);
     };
-  };
-
-  const updateCity = (city) => {
-    const transaction = db.transaction(['CityStore'], 'readwrite');
-    const objectStore = transaction.objectStore('CityStore');
-    const request = objectStore.put(city);
-
-    request.onsuccess = () => {
-      fetchCities(db);
-      setCityName('');
-      setIsCityEditing(false);
-    };
-
-    request.onerror = (event) => {
-      console.error('Update city request error:', event.target.errorCode);
-    };
-  };
-
-  const handleEditData = (item) => {
-    setEditFormData({
-      id: item.id,
-      name: item.name,
-      email: item.email,
-      city: item.city
-    });
-    setIsEditing(true);
-  };
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setEditFormData({
-      ...editFormData,
-      [name]: value
-    });
-  };
-
-  const handleCityChange = (e) => {
-    setCityName(e.target.value);
-  };
-
-  const handleFilterChange = (e) => {
-    setFilterName(e.target.value);
-  };
-
-  const cancelEdit = () => {
-    setEditFormData({ id: null, name: '', email: '', city: '' });
-    setIsEditing(false);
   };
 
   const deleteData = (id) => {
@@ -440,7 +308,42 @@ const IndexedDBComponent = () => {
     };
 
     request.onerror = (event) => {
-      console.error('Delete request error:', event.target.errorCode);
+      console.error('Delete request error:', event.target.error);
+    };
+  };
+
+  const handleEditClick = (item) => {
+    setEditFormData(item);
+    setIsEditing(true);
+  };
+
+  const handleEditFormChange = (event) => {
+    const { name, value } = event.target;
+    setEditFormData((prevState) => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
+  const handleCityEditClick = (item) => {
+    setCityName(item.name);
+    setIsCityEditing(true);
+  };
+
+  const updateCity = () => {
+    const transaction = db.transaction(['CityStore'], 'readwrite');
+    const objectStore = transaction.objectStore('CityStore');
+    const updatedCity = { ...editFormData, name: cityName };
+    const request = objectStore.put(updatedCity);
+
+    request.onsuccess = () => {
+      fetchCities(db);
+      setCityName('');
+      setIsCityEditing(false);
+    };
+
+    request.onerror = (event) => {
+      console.error('Update city request error:', event.target.error);
     };
   };
 
@@ -454,157 +357,105 @@ const IndexedDBComponent = () => {
     };
 
     request.onerror = (event) => {
-      console.error('Delete city request error:', event.target.errorCode);
+      console.error('Delete city request error:', event.target.error);
     };
   };
 
-  const filteredData = data.filter(item =>
-    item.name.toLowerCase().includes(filterName.toLowerCase())
-  );
-
-  const renderPeopleView = () => (
-    <>
-      <Form>
-        <Input
-          type="text"
-          placeholder="Filter by Name"
-          value={filterName}
-          onChange={handleFilterChange}
-        />
-        <Button onClick={addData}>Add Name</Button>
-      </Form>
-      <Accordion>
-        {cities.map(city => (
-          <AccordionItem key={city.id}>
-            <AccordionTitle onClick={() => setAccordionOpen(prev => ({ ...prev, [city.id]: !prev[city.id] }))}>
-              {city.name}
-            </AccordionTitle>
-            <AccordionContent isOpen={accordionOpen[city.id]}>
-              <DataList>
-                {filteredData
-                  .filter(person => person.city === city.name)
-                  .map(item => (
-                    <DataItem key={item.id}>
-                      <div>
-                        <DataText>ID: {item.id}</DataText>
-                        <DataText>Name: {item.name}</DataText>
-                      </div>
-                      <div>
-                        <Button onClick={() => handleEditData(item)}>Edit</Button>
-                      </div>
-                    </DataItem>
-                  ))}
-              </DataList>
-            </AccordionContent>
-          </AccordionItem>
-        ))}
-      </Accordion>
-      {isEditing && (
-        <EditFormContainer>
-          <EditForm onSubmit={updateData}>
-            <EditInput
-              type="text"
-              placeholder="Name"
-              name="name"
-              value={editFormData.name}
-              onChange={handleInputChange}
-            />
-            <EditInput
-              type="email"
-              placeholder="Email"
-              name="email"
-              value={editFormData.email}
-              onChange={handleInputChange}
-            />
-            <EditInput
-              type="text"
-              placeholder="City"
-              name="city"
-              value={editFormData.city}
-              onChange={handleInputChange}
-            />
-            <div>
-              <EditButton type="submit">Save</EditButton>
-              <CancelButton type="button" onClick={cancelEdit}>Cancel</CancelButton>
-              <DeleteButton type="button" onClick={() => deleteData(editFormData.id)}>Delete</DeleteButton>
-            </div>
-          </EditForm>
-        </EditFormContainer>
-      )}
-    </>
-  );
-
-  const renderCitiesView = () => (
-    <CityFormContainer>
-      <Form>
-        <Input
-          type="text"
-          placeholder="City"
-          value={cityName}
-          onChange={handleCityChange}
-        />
-        <Button onClick={addCity}>Add City</Button>
-      </Form>
-      <DataList>
-        {cities.map(city => (
-          <DataItem key={city.id}>
-            <div>
-              <DataText>ID: {city.id}</DataText>
-              <DataText>Name: {city.name}</DataText>
-            </div>
-            <div>
-              <Button onClick={() => {
-                setCityName(city.name);
-                setIsCityEditing(true);
-              }}>Edit</Button>
-              <DeleteButton onClick={() => deleteCity(city.id)}>Delete</DeleteButton>
-            </div>
-          </DataItem>
-        ))}
-      </DataList>
-      {isCityEditing && (
-        <EditFormContainer>
-          <EditForm onSubmit={() => updateCity({ id: cities.find(city => city.name === cityName).id, name: cityName })}>
-            <EditInput
-              type="text"
-              placeholder="City"
-              value={cityName}
-              onChange={handleCityChange}
-            />
-            <div>
-              <EditButton type="submit">Save</EditButton>
-              <CancelButton type="button" onClick={() => setIsCityEditing(false)}>Cancel</CancelButton>
-            </div>
-          </EditForm>
-        </EditFormContainer>
-      )}
-    </CityFormContainer>
-  );
+  const toggleAccordion = (id) => {
+    setAccordionOpen((prevState) => ({
+      ...prevState,
+      [id]: !prevState[id]
+    }));
+  };
 
   return (
     <Container>
-      <h1>IndexedDB React Component</h1>
-      
-      <h2>Ohje, kun tämä vielä ihan kesken:</h2>
-      <h3>Idea: Lista on haitarityyppinen, mutta muotoilu kesken. Eli kun klikkaat kaupungin nimeä, sen alle listautuu siinä kaupungissa asuvat ihmiset</h3>
-      
-      <ul>
-        
-        <li>Aloita tästä: Ihan ekana valitse Manage Cities ja paina "Add City", niin että tulee tyhjä kaupunki. </li>
-        <li>Lisää sitten vaikka joku oikee kaupunki</li>
-        <li>Valitse sitten Manage people ja lisää jokin nimi "Add Name" painikkeella. Nimi tulee näkyviin alla olevaan listaan, kun klikkaat harmaata palkkia, joka on "nimetön kaupunki"</li>
-        <li>Lisää sitten aina nimi, ja kun editoit, voit antaa jonkin kaupungin nimen, joka on jo annettu. Jos annat kaupungin, jota ei ole, nimi ei näy listalla ennkuin lisäät kaupungin</li>
-        <li>Huomaa että nimi toimii myös filtterinä, Add name painike ei vielä tyhjennä kenttää</li>
-        
-      </ul>
-    <hr/>
-      {/* Lisätty Menu*/}
-      <Menu onDeleteDatabase={handleDeleteDatabase} />
-      {/* Muu sisältö ja renderöinti tässä */}
+      <h1>IndexedDB with React</h1>
+      <Menu setView={setView} handleDeleteDatabase={handleDeleteDatabase} />
 
-      <LinkButton onClick={() => setView('people')}>Manage People</LinkButton>
-      <LinkButton onClick={() => setView('cities')}>Manage Cities</LinkButton>
-      {view === 'people' ? renderPeopleView() : renderCitiesView()}
+      {view === 'people' && (
+        <>
+          <h2>People</h2>
+          <Input
+            type="text"
+            placeholder="Filter by name"
+            value={filterName}
+            onChange={(e) => setFilterName(e.target.value)}
+          />
+          <Button onClick={addData}>Add Data</Button>
+          <DataList>
+            {data
+              .filter((item) => item.name.toLowerCase().includes(filterName.toLowerCase()))
+              .map((item) => (
+                <DataItem key={item.id}>
+                  <DataText>Name: {item.name}</DataText>
+                  <DataText>Email: {item.email}</DataText>
+                  <DataText>City: {item.city}</DataText>
+                  <Button onClick={() => handleEditClick(item)}>Edit</Button>
+                  <DeleteButton onClick={() => deleteData(item.id)}>Delete</DeleteButton>
+                </DataItem>
+              ))}
+          </DataList>
+          {isEditing && (
+            <EditFormContainer>
+              <EditForm onSubmit={updateData}>
+                <h2>Edit Data</h2>
+                <EditInput
+                  type="text"
+                  name="name"
+                  placeholder="Name"
+                  value={editFormData.name}
+                  onChange={handleEditFormChange}
+                />
+                <EditInput
+                  type="email"
+                  name="email"
+                  placeholder="Email"
+                  value={editFormData.email}
+                  onChange={handleEditFormChange}
+                />
+                <EditInput
+                  type="text"
+                  name="city"
+                  placeholder="City"
+                  value={editFormData.city}
+                  onChange={handleEditFormChange}
+                />
+                <EditButton type="submit">Update</EditButton>
+                <CancelButton onClick={() => setIsEditing(false)}>Cancel</CancelButton>
+              </EditForm>
+            </EditFormContainer>
+          )}
+        </>
+      )}
+
+      {view === 'cities' && (
+        <>
+          <h2>Cities</h2>
+          <Form>
+            <Input
+              type="text"
+              placeholder="Add a city"
+              value={cityName}
+              onChange={(e) => setCityName(e.target.value)}
+            />
+            <Button onClick={addCity}>{isCityEditing ? 'Update City' : 'Add City'}</Button>
+          </Form>
+          <Accordion>
+            {cities.map((city) => (
+              <AccordionItem key={city.id}>
+                <AccordionTitle onClick={() => toggleAccordion(city.id)}>
+                  {city.name}
+                </AccordionTitle>
+                <AccordionContent isOpen={accordionOpen[city.id]}>
+                  <Button onClick={() => handleCityEditClick(city)}>Edit</Button>
+                  <DeleteButton onClick={() => deleteCity(city.id)}>Delete</DeleteButton>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        </>
+      )}
     </Container>
   );
 };

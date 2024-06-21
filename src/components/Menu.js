@@ -1,79 +1,135 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBars } from '@fortawesome/free-solid-svg-icons';
 
 const MenuContainer = styled.div`
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background-color: #333;
-  padding: 10px 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  position: relative;
   z-index: 1000;
 `;
 
-const MenuList = styled.ul`
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-  position: fixed;
-  top: 50px; /* Alkaa menupalkin alapuolelta */
-  left: 0;
-  width: 250px;
-  height: calc(100% - 50px); /* Korkeus suhteutettu menupalkkiin */
+const HamburgerIcon = styled.div`
+  width: 30px;
+  height: 30px;
   background-color: white;
-  transform: ${({ isOpen }) => (isOpen ? 'translateX(0)' : 'translateX(-100%)')};
-  transition: transform 0.3s ease-in-out;
-  z-index: 999;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+  border-radius: 4px;
 `;
 
-const MenuItem = styled.li`
-  padding: 10px;
-  text-decoration: none;
-  color: black;
-  cursor: pointer;
+const Line = styled.div`
+  width: 20px;
+  height: 2px;
+  background-color: black;
+  margin: 2px 0;
+`;
 
+const DropdownMenu = styled.div`
+  position: fixed;
+  top: 50px;
+  left: 10px;
+  background-color: white;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+  z-index: 999;
+  display: ${props => (props.open ? 'block' : 'none')};
+`;
+
+const MenuItem = styled.div`
+  padding: 10px 20px;
+  cursor: pointer;
+  color: black;
   &:hover {
     background-color: #ddd;
   }
 `;
 
-const MenuIcon = styled.div`
-  cursor: pointer;
-  color: white;
-  font-size: 24px;
+const ConfirmDialog = styled.div`
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  color: black;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
 `;
 
-const Menu = ({ onDeleteDatabase }) => {
-  const [isOpen, setIsOpen] = useState(false);
+const ButtonContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+`;
+
+const Button = styled.button`
+  padding: 10px 20px;
+  cursor: pointer;
+  border: none;
+  background-color: ${props => props.primary ? '#4CAF50' : '#f44336'};
+  color: white;
+  border-radius: 4px;
+  &:hover {
+    opacity: 0.8;
+  }
+`;
+
+const Menu = () => {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  const handleMenuToggle = () => {
+    setMenuOpen(!menuOpen);
+  };
 
   const handleDeleteDatabase = () => {
-    const confirmDelete = window.confirm('Are you sure you want to delete the database? This action cannot be undone.');
-    if (confirmDelete) {
-      onDeleteDatabase();
-      //setIsOpen(false); // Close menu after deleting database
-    }
-    setIsOpen(false); //Suljetaan menu joka tapauksessa
+    setShowConfirmDialog(true);
+  };
+
+  const confirmDeleteDatabase = () => {
+    const request = indexedDB.deleteDatabase('MyDatabase');
+    request.onsuccess = () => {
+      console.log('Database deleted successfully');
+      window.location.reload();
+    };
+    request.onerror = (event) => {
+      console.error('Error deleting database:', event.target.errorCode);
+    };
+    setShowConfirmDialog(false);
+  };
+
+  const cancelDeleteDatabase = () => {
+    setShowConfirmDialog(false);
   };
 
   return (
-    <>
-      <MenuContainer>
-        <MenuIcon onClick={() => setIsOpen(!isOpen)}>
-          <FontAwesomeIcon icon={faBars} />
-        </MenuIcon>
-      </MenuContainer>
-      <MenuList isOpen={isOpen}>
+    <MenuContainer>
+      <HamburgerIcon onClick={handleMenuToggle}>
+        <Line />
+        <Line />
+        <Line />
+      </HamburgerIcon>
+      <DropdownMenu open={menuOpen}>
         <MenuItem onClick={handleDeleteDatabase}>Delete Database</MenuItem>
-        {/* Add other menu options as needed */}
-        <MenuItem >Testi menuitem</MenuItem>
-        <MenuItem >Testi menuitem2</MenuItem>
-      </MenuList>
-    </>
+      </DropdownMenu>
+      {showConfirmDialog && (
+        <ConfirmDialog>
+          <div style={{ marginBottom: '20px' }}>Are you sure you want to delete the database?</div>
+          <ButtonContainer>
+            <Button onClick={confirmDeleteDatabase} primary>
+              Delete
+            </Button>
+            <Button onClick={cancelDeleteDatabase}>
+              Cancel
+            </Button>
+          </ButtonContainer>
+        </ConfirmDialog>
+      )}
+    </MenuContainer>
   );
 };
 

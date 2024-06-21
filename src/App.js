@@ -1,63 +1,58 @@
-import {ThemeProvider, createGlobalStyle} from 'styled-components'
-//import React from 'react';
-import './App.css';
-//Jostain syystä valittaa tästä, että on jo importattu, mutta pienellä kirjaimella button
-import StyledButton, {FancyButton, SubmitButton} from './components/Button/Button'
-import {DarkButton} from './components/Button/Button.styles';
-import HandleFile from './components/Filehandling';
-import IndexedDBComponent from './components/DBHandling';
+import React, { useState } from 'react';
+import styled from 'styled-components';
+import Menu from './components/Menu';
+import Footer from './components/Footer';
+import PeopleView from './components/PeopleView';
+import CitiesView from './components/CitiesView';
 
-const theme = {
-  dark: {
-    primary: 'black',
-    text: 'white'
-  },
-  light: {
-    primary: '#fff',
-    text: '#000'
-  },
-  fontFamily: 'Segoe UI'
-}
+const Container = styled.div`
+  padding: 20px;
+  padding-top: 60px; /* For the fixed header */
+  padding-bottom: 60px; /* For the fixed footer */
+`;
 
-const GlobalStyle= createGlobalStyle`
-button {
-  /*font-family: 'Roboto';*/
-  font-family: ${(props) => props.theme.fontFamily}
-}
-`
+const Header = styled.header`
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background-color: black;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 20px;
+  z-index: 1000;
+`;
 
-function App() {
+const Title = styled.h1`
+  margin: 0;
+`;
+
+const Content = styled.div`
+  padding-top: 20px;
+`;
+
+const App = () => {
+  const [view, setView] = useState('people');
+
+  const handleViewChange = newView => {
+    setView(newView);
+  };
+
   return (
-    <ThemeProvider theme={theme}>
-      <GlobalStyle />
-      <div className="App">
-        <br/>
-        <br/>
-        <br/>
-        <h1>Kokeilu: React PWA </h1>
-        <hr/>
-        <h2> Styled komponent Buttoneita</h2>  
-        <div>
-        <button>Button</button>
-        </div>
-        <StyledButton type='submit'>Styled Button</StyledButton>
-        <div><br/></div>
-        <StyledButton variant='outline'>Styled Button, outline</StyledButton>
-        <div><br/></div>
-        <FancyButton as='a'>Fancy Button, linkkinä</FancyButton>
-        <div><br/></div>
-        <SubmitButton>SubmitButton</SubmitButton>
-        <div><br/></div>
-        <DarkButton>DarkButton</DarkButton>
-        <div><br/></div><div><br/></div><div><br/></div>
-        <hr/>
-        <HandleFile></HandleFile>
-        <hr/>
-        <IndexedDBComponent></IndexedDBComponent>
-
-      </div>
-    </ThemeProvider>
+    <>
+      <Header>
+        <Title>IndexedDB with React</Title>
+        <Menu onViewChange={handleViewChange} />
+      </Header>
+      <Container>
+        <Content>
+          {view === 'people' ? <PeopleView /> : <CitiesView />}
+        </Content>
+      </Container>
+      <Footer setView={setView} />
+    </>
   );
-}
+};
 
 export default App;
