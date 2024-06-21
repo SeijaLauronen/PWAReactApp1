@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/PWAReactApp1/static/css/main.98e0ec7e.css",
-    "main.js": "/PWAReactApp1/static/js/main.a0aea788.js",
+    "main.css": "/PWAReactApp1/static/css/main.e6c13ad2.css",
+    "main.js": "/PWAReactApp1/static/js/main.516df8b9.js",
     "index.html": "/PWAReactApp1/index.html",
-    "main.98e0ec7e.css.map": "/PWAReactApp1/static/css/main.98e0ec7e.css.map",
-    "main.a0aea788.js.map": "/PWAReactApp1/static/js/main.a0aea788.js.map"
+    "main.e6c13ad2.css.map": "/PWAReactApp1/static/css/main.e6c13ad2.css.map",
+    "main.516df8b9.js.map": "/PWAReactApp1/static/js/main.516df8b9.js.map"
   },
   "entrypoints": [
-    "static/css/main.98e0ec7e.css",
-    "static/js/main.a0aea788.js"
+    "static/css/main.e6c13ad2.css",
+    "static/js/main.516df8b9.js"
   ]
 }
